@@ -101,9 +101,13 @@ var filePanelHander = function () {
                     //         else {
                     //             //$("#previewImageObject").attr('src', 'data:image/png;base64,' + base64Encode(data));
                     //             var rawRes = data;
-                    //             //var b64Res = btoa(unescape(encodeURIComponent(rawRes)))
-                    //             var b64Res = btoa(rawRes);//window.btoa(unescape(encodeURIComponent(rawRes)));
-                    //             $("#previewImageObject").attr('src', 'data:image/jpg;base64,' + b64Res);
+                    //             var imgsrc = window.btoa(unescape(encodeURIComponent(rawRes))); 
+                    //             //var b64 = window.btoa(unescape(encodeURIComponent(rawRes)))
+                    //             //var str2 = decodeURIComponent(escape(window.atob(b64)));
+                    //             //var b64Res = decodeURIComponent(escape(window.atob(data)));
+                    //             //var b64Res = window.btoa(encodeURIComponent(rawRes))
+                    //             //var b64Res = window.btoa(rawRes);//window.btoa(unescape(encodeURIComponent(rawRes)));
+                    //             $("#previewImageObject").attr('src', 'data:image/jpg;base64,' + rawRes);
                     //             //alert(base64Encode(rawRes));
                     //             //console.log(base64Encode(rawRes))
                     //             //$("#previewImageObject").attr('src', 'data:image/png;base64,' + base64Encode(data));

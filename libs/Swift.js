@@ -240,7 +240,6 @@ module.exports = (function()
         var param = {
             method: 'GET',
             url: this.options.url,
-            encoding: null,
             headers: {
                 'x-auth-token': this.options.token
             },

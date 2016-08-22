@@ -113,5 +113,8 @@ var mainPageHandler = function () {
     });
     $('#displayFileExplorer').hide();
     $('.header-swift-info').show();
-    $('.header-navigator').hide();
+    $('.breadcrumb > li').each(function (i, e) {
+        $(this).remove(); 
+    });
+    //$('.header-navigator').hide();
 }
