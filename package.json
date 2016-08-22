@@ -1,0 +1,21 @@
+{
+  "name": "swift-portal",
+  "version": "0.0.1",
+  "dependencies": {
+    "bluebird": "^3.4.1",
+    "body-parser": "*",
+    "express": "*",
+    "express-session": "^1.14.0",
+    "form-data": "1.0.0-rc3",
+    "handlebars": "^4.0.5",
+    "method-override": "*",
+    "multiparty": "4.1.2",
+    "node-env-file": "^0.1.8",
+    "nodejs-imp": "*",
+    "progress-stream": "^1.2.0",
+    "request": "^2.74.0",
+    "socket.io": "^1.4.8",
+    "urlencode": "^1.1.0",
+    "wrap": "^0.1.2"
+  }
+}

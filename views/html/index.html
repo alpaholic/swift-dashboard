@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta charset="UTF-8" />
+
+    <link rel="stylesheet" href="@{lib/bootstrap/css}/bootstrap.min.css">
+    <link rel="stylesheet" href="@{css}/common.css">
+    <link rel="stylesheet" href="@{lib/css}/jquery.contextmenu.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="@{lib/js}/jquery.contextmenu.js"></script>
+    <script src="@{lib/js}/handlebars.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="@{lib/bootstrap/js}/bootstrap.min.js"></script>
+    <script src="@{js}/common.js"></script>
+    <script src="@{js}/service.js"></script>
+    <script src="@{js}/handler.js"></script>
+    <script src="@{js}/actions.js"></script>
+    <script src="@{js}/container.js"></script>
+    <script src="@{js}/explorer.js"></script>
+    <script src="@{js}/upload.js"></script>
+    <script src="@{js}/controller.js"></script>
+
+    <script id="make-object" type="text/x-handlebars-template">
+        <div class="row file-position object-depth-{{depth}}">
+            <div class="col-lg-1" object-type="{{type}}">
+                <span class="{{img}} object-file-type" aria-hidden="true"></span>
+            </div>
+            <div class="col-lg-8 object-file-name {{dirPadding}}">{{name}}</div>
+        </div>
+    </script>
+
+    <script id="make-search-object" type="text/x-handlebars-template">
+        <div class="row">
+            <div class="col-lg-1 search-icon"><h3 class="{{img}}"></h3></div>
+                <div class="col-lg-6">
+                    <p class="text-left h5 search-file-name">{{name}}</p>
+                    <p class="text-left h5 search-file-path"><strong>{{path}}</strong></p>
+            </div>
+            <div class="col-lg-5">
+                <p class="text-right h5 search-last-modified">{{modified}}</p>
+                <p class="text-right h5 search-file-size">{{size}}</p>
+            </div>
+        </div>
+    </script>
+
+    <script id="make-container-object" type="text/x-handlebars-template">
+        <div class="panel custom panel-default left-container-info">
+            <div class="panel-body left-container-body">
+                <div class="container-name">{{name}}</div>
+                <div>{{count}} Files | {{size}}</div>
+            </div>
+        </div>
+    </script>
+
+    <script id="make-file-panel" type="text/x-handlebars-template">
+        <div class="col-lg-4th-panel {{last}}">
+            <div class="panel panel-default">
+                <div class="panel-body file-explorer">
+                    <div class="main-content-scroll2 content-scroll explorer-panel">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <script id="make-navigator-object" type="text/x-handlebars-template">
+        <li><a href="#" onclick="navigatorHandler(this);" depth="{{depth}}">{{path}}</a></li>
+    </script>
+
+    <script id="make-navigator-object-last" type="text/x-handlebars-template">
+        <li class="active custom">{{path}}</li>
+    </script>
+    <title>Swift Dashboard</title>
+</head>
+
+<body>
+    <div class="container">
+        <!-- 상단 CF SWIFT 시작 -->
+        <div class="row header-main-section ">
+            <div class="col-lg-8">
+                <h2 class="color-gray header-main-title"><a href="#" onclick="window.location.reload(true);">Swift Dashboard</a></h2>
+            </div>
+            <div class="col-lg-4 header-help-message">
+                <p id="helperMessage" class="bg-danger custom text-left h5"></p>
+            </div>
+        </div>
+        <!-- 상단 CF SWIFT 끝 -->
+        <div class="row">
+            <div class="col-lg-12">
+                <hr />
+            </div>
+        </div>
+        <!-- 버튼 / 검색 박스 시작 -->
+        <div class="row">
+            <div class="col-xs-12 col-lg-2">
+                <div class="row">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary custom dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                            Create <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu" role="menu">
+                            <li><a href="#" data-toggle="modal" data-target="#createObject" data-whatever="container">Container</a></li>
+                            <li><a href="#" id="contextMenuCreate" data-toggle="modal" data-target="#createObject" data-whatever="directory">Directory</a></li>
+                        </ul>
+                    </div>
+                    <form action="/uploadObject" method="post" enctype="multipart/form-data" id="fileForm" name="uploadForm">
+                        <input type="file" id="uploadFile" name="uploadObject" />
+                    </form>
+                    <button type="button" id="btnUpload" class="btn btn-default custom">Upload</button>
+                </div>
+            </div>
+            <div class="col-xs-12 col-lg-10 header-search-box">
+                <div class="row">
+                    <div class="col-xs-10 col-lg-12">
+                        <div class="input-group">
+                            <input id="searchValue" type="text" class="form-control" style="height: 34px;" placeholder="Search for...">
+                            <span class="input-group-btn">
+                                <button type="button" id="btnFileSearch" class="btn btn-default" aria-label="Left Align">
+                                    <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                            </button>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 버튼 / 검색 박스 끝 -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div style="height: 5px;"></div>
+            </div>
+            <div class="col-lg-12">
+                <div class="progress custom">
+                    <div class="progress-bar progress-bar-info progress-bar-stripeds" role="progressbar" aria-valuenow="60" aria-valuemin="0"
+                        aria-valuemax="100" style="min-width: 2em;">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row header-navigator">
+            <div class="col-lg-2">
+                <p class="text-left h4">Containers</p>
+            </div>
+            <div class="col-lg-10 header-file-navigator">
+                <ol class="breadcrumb custom">
+                </ol>
+            </div>
+        </div>
+        <!-- 메인 시작 -->
+        <div class="row main-content-section">
+            <!-- 좌측 컨테이너 정보 시작 -->
+            <div class="col-lg-2 main-content-scroll left-container-list">
+                <div id="containerList">
+                </div>
+            </div>
+            <!-- 좌측 컨테이너 정보 끝 -->
+            <div class="col-lg-10 header-swift-info">
+                <h3><strong>Swift Info.</strong></h3>
+                <div class="row">
+                        <div class="col-lg-3">
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <div>Storage Containers</div>
+                                    <p id="totalContainers" class="text-left h1 header-info-text"></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <div>Total Files</div>
+                                    <p id="totalFiles" class="text-left h1 header-info-text"></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <div>Storage Consumed</div>
+                                    <p id="totalConsumed" class="text-left h1 header-info-text"></p>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            </div>
+            <!-- 검색화면 시작 -->
+            <div id="displaySeachResult" class="col-lg-10 content-scroll" style="display: none;"></div>
+            <!-- 검색화면 끝 -->
+            <!-- 파일 목록 화면 시작 -->
+            <div id="displayFileExplorer" class="col-lg-10">
+                <div class="row main-file-explorer">
+                    <!-- 좌측 파일 리스트 시작 -->
+                    <div class="col-lg-8">
+                        <div class="row auto-increase panel-border">
+                            <!-- 1번 패널 시작 -->
+                            <div class="col-lg-4th-panel first-panel">
+                                <div class="panel panel-default ">
+                                    <div class="panel-body file-explorer">
+                                        <div class="main-content-scroll2 content-scroll explorer-panel">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 1번 패널 끝 -->
+                        </div>
+                    </div>
+                    <!-- 좌측 파일 리스트 끝 -->
+                    <!-- 우측 파일 정보 시작 -->
+                    <div class="col-lg-4 display-file-information">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="panel panel-default">
+                                    <div class="panel-body ">
+                                        <div class="main-content-scroll2 content-scroll object-detail-information">
+                                            <table id="fileDetailInfo" class="table">
+                                                <tr>
+                                                    <td class="file-information"><strong>File Name</strong></td>
+                                                    <td id="infoFileName"></td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="file-information"><strong>File Path</strong></td>
+                                                    <td id="infoFilePath"></td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="file-information"><strong>Type</strong></td>
+                                                    <td id="infoFileType"></td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="file-information"><strong>Size</strong></td>
+                                                    <td id="infoFileSize"></td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="file-information last"><strong>Last modified</strong></td>
+                                                    <td id="infoFileModified" style="border-bottom: 1px solid #ddd"></td>
+                                                </tr>
+                                                <tr>
+                                                    <td colspan="2"><img id="previewImageObject" style="max-width: 100%; max-height: 100%"
+                                                        /></td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 우측 파일 정보 끝 -->
+                </div>
+            </div>
+            <!-- 파일 목록 화면 끝 -->
+        </div>
+        <!-- 메인 끝 -->
+        <div class="row">
+            <div class="col-lg-12 ">
+                <hr />
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Container & Directory -->
+    <div class="modal modal-center fade" id="createObject" tabindex="-1" role="dialog" aria-labelledby="createObjectLabel" aria-hidden="true">
+        <div class="modal-dialog modal-center">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="createObjectLabel">Create a new </h4>
+                </div>
+                <div class="modal-body">
+                    <form onsubmit="return false;">
+                        <div class="form-group">
+                            <label for="object-name" class="control-label">Name:</label>
+                            <input type="text" class="form-control" id="object-name">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button id="btnObjectCreate" type="button" class="btn btn-primary">Create</button>
+                    <p class="text-right h5 create-warning"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="loadingBar">
+        <!-- Place at bottom of page -->
+    </div>
+</body>
+
+</html>
