@@ -141,6 +141,8 @@ p.bg-danger.custom, p.bg-success.custom
 
 #displaySeachResult
 {
+    height: 630px;
+    overflow-y: scroll;
     padding-left: 20px;
 }
 .row.file-selected

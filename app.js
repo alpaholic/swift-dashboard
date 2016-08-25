@@ -60,8 +60,19 @@ try {
 	app.use(session({
 		secret: 'swift',
 		resave: false,
-		saveUninitialized: true
+		saveUninitialized: true,
+		cookie: { 
+	        expires: new Date(Date.now() + 180 * 10000), 
+	        maxAge: 180*10000
+	    }
 	}));
+
+	app.use(function(req, res, next){
+		if(!req.session)
+			req.session = {};
+
+			next();
+	});
 
 	/**
 	 * error handling

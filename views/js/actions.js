@@ -44,7 +44,17 @@ var actionHandler = function (target) {
                         {
                             containerHandler(_destOptions.destConName, isClick, function () {
                                 if (!isClick) {
-                                    var selector = '.object-depth-' + (_navigatorGlobal.currentDepth - 1) + '.file-selected';
+                                    // var selector = '.object-depth-' + (_navigatorGlobal.currentDepth - 1) + '.file-selected';
+                                    // $(selector).trigger('click');
+                                    var selector ;
+                                    var lastPanelIndex = $('.panel-border > .col-lg-4th-panel').length - 1;
+                                    if (lastPanelIndex == _navigatorGlobal.currentDepth) // 최상위에서 만든 경우
+                                    {
+                                        selector = '.object-depth-' + (lastPanelIndex - 1) + '.file-selected';
+                                    } else // 그 외
+                                    {
+                                        selector = '.object-depth-' + (_navigatorGlobal.currentDepth - 1) + '.file-old-selected';
+                                    }
                                     $(selector).trigger('click');
                                 }
                             });
@@ -66,7 +76,17 @@ var actionHandler = function (target) {
                             {
                                 containerHandler(_destOptions.destConName, true, function () {
                                     if (!isClick) {
-                                        var selector = '.object-depth-' + (_navigatorGlobal.currentDepth - 1) + '.file-selected';
+                                        // var selector = '.object-depth-' + (_navigatorGlobal.currentDepth - 1) + '.file-selected';
+                                        // $(selector).trigger('click');
+                                        var selector ;
+                                        var lastPanelIndex = $('.panel-border > .col-lg-4th-panel').length - 1;
+                                        if (lastPanelIndex == _navigatorGlobal.currentDepth) // 최상위에서 만든 경우
+                                        {
+                                            selector = '.object-depth-' + (lastPanelIndex - 1) + '.file-selected';
+                                        } else // 그 외
+                                        {
+                                            selector = '.object-depth-' + (_navigatorGlobal.currentDepth - 1) + '.file-old-selected';
+                                        }
                                         $(selector).trigger('click');
                                     }
                                 });
@@ -93,9 +113,14 @@ var createHandler = function () {
     var objectName = $('#object-name').val();
     var info = getAllSelectedAction();
     var service = new Service();
-
+    var special_pattern = /[`~!@#$%^&*|\\\'\";:\/?]/gi;
     if (objectName == '') {
         commonInsertHtml('.create-warning', 'You should write container/directory name.');
+        return;
+    }
+
+    if( special_pattern.test(objectName) == true ){
+        commonInsertHtml('.create-warning', 'Special letters are forbidden.');
         return;
     }
 
@@ -125,10 +150,13 @@ var createHandler = function () {
                 containerHandler(info.conName, isClick, function () {
                     if (!isClick) {
                         var selector ;
-                        if (info.objectType == 'dir') {
-                            selector = '.object-depth-' + (_navigatorGlobal.currentDepth - 1) + '.file-selected';
-                        } else {
-                            var selector = '.object-depth-' + (_navigatorGlobal.currentDepth - 1) + '.file-old-selected';
+                        var lastPanelIndex = $('.panel-border > .col-lg-4th-panel').length - 1;
+                        if (lastPanelIndex == _navigatorGlobal.currentDepth) // 최상위에서 만든 경우
+                        {
+                            selector = '.object-depth-' + (lastPanelIndex - 1) + '.file-selected';
+                        } else // 그 외
+                        {
+                            selector = '.object-depth-' + (_navigatorGlobal.currentDepth - 1) + '.file-old-selected';
                         }
                         $(selector).trigger('click');
                     }
@@ -166,7 +194,9 @@ var deleteHander = function (done) {
                             containerHandler();
                             $('#displayFileExplorer').hide();
                             $('.header-swift-info').show();
-                            $('.header-navigator').hide();
+                            $('.breadcrumb > li').each(function (i, e) {
+                                $(this).remove(); 
+                            });
                             $('.first-panel').hide();
                         });
                         
@@ -220,22 +250,29 @@ var searchHandler = function () {
         $(this).remove();
     });
 
-    service.searchObject(info.conName, search, function (result, error) {
+    $('.breadcrumb > li').each(function (i, e) {
+        $(this).remove(); 
+    });
+
+    if (info.conName == "")
+    {
+        commonHelperMessage('You should select container on the container list.', true);
+        return;
+    }
+
+    service.searchObject(info.conName, search, function (data, error) {
 
         if (error) 
             commonErrorHandler(error);
         else
         {
-            for (var i = 0; i < result.length; i++) {
-                console.log(result);
-                var name = result[i].objectName;
-                var path = result[i].path;
-                var modified = result[i].lastModified;
-                var size = result[i].objectSize;
-                var type = 'file';
-
-                if (result[i].objectType == 'application/directory') 
-                    type = "dir";
+            var result = sortSearchObjectList(data);
+            for (var i = 0; i < result.items.length; i++) {
+                var name = result.items[i].objectName;
+                var path = result.items[i].path;
+                var modified = result.items[i].lastModified;
+                var size = result.items[i].objectSize;
+                var type = result.items[i].objectType;
                 $('#displaySeachResult').first().append(makeSearchObject(type, name, path, modified, size));
             }
         }

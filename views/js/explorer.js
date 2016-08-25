@@ -89,44 +89,25 @@ var filePanelHander = function () {
                     commonInsertHtml('#infoFileSize', convertBytesToX(data["content-length"], 1));
                     commonInsertHtml('#infoFileModified', data["last-modified"]);
                     
-                    // var slashIndex = data["content-type"].lastIndexOf("/");
-                    // var fileOrgType = data["content-type"];
-                    // var fileType = data["content-type"].substring(slashIndex+1).toLowerCase();
-
-                    // if (fileType == "jpg" || fileType == "png" || fileType == "gif" || fileType == "jpeg")
-                    // {
-                    //     service.getImageObjectInfo(info.conName, info.dirPath, info.objectName, function (data, error) {
-                    //         if (error) 
-                    //             commonErrorHandler(error);
-                    //         else {
-                    //             //$("#previewImageObject").attr('src', 'data:image/png;base64,' + base64Encode(data));
-                    //             var rawRes = data;
-                    //             var imgsrc = window.btoa(unescape(encodeURIComponent(rawRes))); 
-                    //             //var b64 = window.btoa(unescape(encodeURIComponent(rawRes)))
-                    //             //var str2 = decodeURIComponent(escape(window.atob(b64)));
-                    //             //var b64Res = decodeURIComponent(escape(window.atob(data)));
-                    //             //var b64Res = window.btoa(encodeURIComponent(rawRes))
-                    //             //var b64Res = window.btoa(rawRes);//window.btoa(unescape(encodeURIComponent(rawRes)));
-                    //             $("#previewImageObject").attr('src', 'data:image/jpg;base64,' + rawRes);
-                    //             //alert(base64Encode(rawRes));
-                    //             //console.log(base64Encode(rawRes))
-                    //             //$("#previewImageObject").attr('src', 'data:image/png;base64,' + base64Encode(data));
-                    //             /*
-                    //             var rawRes = data;
-                    //             var b64Res = window.btoa(unescape(encodeURIComponent(rawRes)));
-                    //             //alert(b64Res);
-                    //             //alert('data:'+fileOrgType+';base64,'+b64Res);
-                    //             //$('#previewImageObject').attr('src', 'data:image/svg+xml;base64,'+b64Res);
-                    //             var outputImg = document.createElement('img');
-                    //             outputImg.src = 'data:image/png;base64,'+atob(b64Res);
-                    //             document.body.appendChild(outputImg);
-                    //             */
-                    //         }
-                    //     });
-                    // }
+                    var slashIndex = data["content-type"].lastIndexOf("/");
+                    var fileOrgType = data["content-type"];
+                    var fileType = data["content-type"].substring(slashIndex+1).toLowerCase();
+                    
+                    $('#fileDetailInfo  tr:first').hide();
+                    if (fileType == "jpg" || fileType == "png" || fileType == "gif" || fileType == "jpeg")
+                    {
+                        service.getImageObjectInfo(info.conName, info.dirPath, info.objectName, function (result, error) {
+                            if (error) 
+                                commonErrorHandler(error);
+                            else {
+                                $("#previewImageObject").attr('src', result.data);
+                                $("#previewImageObject").attr('alt', info.objectName);
+                                $('#fileDetailInfo  tr:first').show();
+                            }
+                        });
+                    }
 
                     $('.display-file-information').show();
-                    //$('#fileDetailInfo').show();
                 }
                 
                 loader.remove();
@@ -191,4 +172,17 @@ var filePanelHander = function () {
 
     filePanelSetting(_navigatorGlobal.currentDepth);
     rearrangePanel(_navigatorGlobal.currentDepth-1);
+}
+
+
+function b64EncodeUnicode(str) {
+    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
+        return String.fromCharCode('0x' + p1);
+    }));
+}
+
+function b64DecodeUnicode(str) {
+    return decodeURIComponent(Array.prototype.map.call(atob(str), function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
 }

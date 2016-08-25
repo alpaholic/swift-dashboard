@@ -14,10 +14,22 @@ $(document).on('click', '.left-container-info', function (e) {
     leftContainerHandler(this);
 });
 
+$(document).on('keyup', '#object-name', function (e) {
+    if(e.keyCode == 13){
+        $("#btnObjectCreate").click();
+    }
+});
+
 // 컨테이너 or 디렉토리 생성
 $(document).on('click', '#btnObjectCreate', function (e) {
     e.preventDefault();
     createHandler();
+});
+
+$(document).on('keyup', '#searchValue', function (e) {
+    if(e.keyCode == 13){
+        $("#btnFileSearch").click();
+    }
 });
 
 // 검색 버튼 클릭
@@ -129,7 +141,9 @@ $(document).ready(function () {
                         }
                     },
                     {
-                        label: 'Paste', action: function () {
+                        label: 'Paste', action: function (e, that) {
+                            var currentDepth = $('.explorer-panel').index($(that));
+                            _navigatorGlobal.rearrangePathStack(_navigatorGlobal.currentDepth - currentDepth);
                             actionHandler('paste');
                         }
                     }

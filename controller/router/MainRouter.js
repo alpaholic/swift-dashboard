@@ -4,6 +4,7 @@ var urlencode = require('urlencode');
 var multiparty = require("multiparty");
 var fs = require('fs');
 var progress = require('progress-stream');
+var uuid = require('node-uuid');
 var connections = {};
 
 var Swift = require(_path.libs + '/Swift');
@@ -14,39 +15,80 @@ var getSwiftInstance = function (req) {
 }
 
 module.exports = function (app, io) {
+
+    var credentialStore = {};
+
+    app.post('/token', function (req, res, next) {
+        var secret = req.body.secret;
+        var credentials = req.body.credentials;
+        var token = uuid.v4();
+
+        //포탈서버에서 client 서버로 접속했을때 생기는 세션이다.
+        if (!req.session.tokens)
+            req.session.tokens = {};
+
+        if (req.session.tokens[secret]) {
+            res.end(req.session.tokens[secret]);
+        }
+        else {
+            req.session.tokens[secret] = token;
+            credentialStore[token] = credentials; //메모리에 토큰을 키로 크레덴셜 저장해 놓는다.
+            res.end(token);
+        }
+    });
+
+
+
     app.get('/', function (req, res, next) {
         var params = req.query;
+        var token = req.query.token;
+        //이 세션은 브라우저와 client서버 사이에 생기는 세션. 즉 위에서 저장한 토큰은 못쓴다. 그러면 크레덴셜도 못쓴다.
 
+        if (!req.session.credentials)
+            req.session.credentials = {};
+
+        var credentials = null;
+        if (req.session.credentials[token]) {
+            credentials = req.session.credentials[token] // 다시 접속하면 저장되어있는걸 쓴다.
+        }
+        else {
+            credentials = req.session.credentials[token] = credentialStore[token]; //스토어에서 쓰고
+            delete credentialStore[token]; // 지운다.
+        }
+
+        if (!credentials) {
+            //잘못된 토큰으로 접속한경우.
+            res.sendStatus(401);
+            return;
+        }
         if (req.session.swift)
             res.render('index');
         else {
             var swift = new Swift({
-                userId: params.userId,
-                password: params.password,
-                tenantName: params.tenantName,
-                tenantId: params.tenantId
+                userId: credentials.username,
+                password: credentials.password,
+                tenantName: credentials.tenantName,
+                tenantId: credentials.tenantId
             });
 
             var done = function (result) {
                 swift.options.token = result.access.token.id;
                 req.session.swiftOptions = swift.getOptions();
-                res.render('index'); 
+                res.render('index');
             }
-            
-            swift.getTokens(done, function(err)
-            {
+
+            swift.getTokens(done, function (err) {
                 res.status(err.code).end(JSON.stringify(err.message));
             });
         }
     });
 
     app.get('/getContainerList', function (req, res, next) {
-        var done = function (result) { 
-            res.send(result); 
+        var done = function (result) {
+            res.send(result);
         }
 
-        getSwiftInstance(req).getContainerList(done, function(err)
-        {
+        getSwiftInstance(req).getContainerList(done, function (err) {
             res.status(err.code).end(JSON.stringify(err.message));
         });
     })
@@ -58,8 +100,7 @@ module.exports = function (app, io) {
             res.send(result);
         }
 
-        getSwiftInstance(req).createContainer(container_name, done, function(err)
-        {
+        getSwiftInstance(req).createContainer(container_name, done, function (err) {
             res.status(err.code).end(JSON.stringify(err.message));
         });
     })
@@ -72,8 +113,7 @@ module.exports = function (app, io) {
             res.send(result);
         }
 
-        getSwiftInstance(req).createDirectory(container_name, dir_name, done, function(err)
-        {
+        getSwiftInstance(req).createDirectory(container_name, dir_name, done, function (err) {
             res.status(err.code).end(JSON.stringify(err.message));
         });
     })
@@ -86,8 +126,7 @@ module.exports = function (app, io) {
             res.send(result);
         }
 
-        getSwiftInstance(req).getContainerInfo(container_name, path, done, function(err)
-        {
+        getSwiftInstance(req).getContainerInfo(container_name, path, done, function (err) {
             res.status(err.code).end(JSON.stringify(err.message));
         });
     })
@@ -103,8 +142,7 @@ module.exports = function (app, io) {
             res.send(result);
         }
 
-        getSwiftInstance(req).getObjectInfo(params, done, function(err)
-        {
+        getSwiftInstance(req).getObjectInfo(params, done, function (err) {
             res.status(err.code).end(JSON.stringify(err.message));
         });
     })
@@ -116,12 +154,22 @@ module.exports = function (app, io) {
             'file': req.query.fileName
         };
 
-        var done = function (result) {
-            res.send(result);
+        var done = function (imageResponse, imageBody) {
+            var imageType = imageResponse.headers['content-type'];
+            var base64 = new Buffer(imageBody, 'binary').toString('base64');
+            var dataURI     = 'data:' + imageType + ';base64,' + base64;
+            var jsonString  = JSON.stringify({
+                code: imageResponse.statusCode,
+                type: imageType,
+                data: dataURI
+            });
+            
+            res.writeHead(imageResponse.statusCode, {'Content-Type': 'application/json'});
+            res.write(jsonString);
+            res.end();
         }
 
-        getSwiftInstance(req).getImageObjectInfo(params, done, function(err)
-        {
+        getSwiftInstance(req).getImageObjectInfo(params, done, function (err) {
             res.status(err.code).end(JSON.stringify(err.message));
         });
     })
@@ -133,8 +181,7 @@ module.exports = function (app, io) {
             res.send(result);
         }
 
-        getSwiftInstance(req).deleteContainer(container_name, done, function(err)
-        {
+        getSwiftInstance(req).deleteContainer(container_name, done, function (err) {
             res.status(err.code).end(JSON.stringify(err.message));
         });
     })
@@ -147,8 +194,7 @@ module.exports = function (app, io) {
             res.send(result);
         }
 
-        getSwiftInstance(req).deleteObject(container_name, object_name, done, function(err)
-        {
+        getSwiftInstance(req).deleteObject(container_name, object_name, done, function (err) {
             res.status(err.code).end(JSON.stringify(err.message));
         });
     })
@@ -162,13 +208,12 @@ module.exports = function (app, io) {
             'dest_dir': req.query.destDir,
             'dest_file': req.query.destFile
         };
-        
+
         var done = function (result) {
             res.send(result);
         }
 
-        getSwiftInstance(req).copyObject(params, done, function(err)
-        {
+        getSwiftInstance(req).copyObject(params, done, function (err) {
             res.status(err.code).end(JSON.stringify(err.message));
         });
     })
@@ -201,8 +246,7 @@ module.exports = function (app, io) {
             res.send(resultData);
         }
 
-        getSwiftInstance(req).searchObject(container_name, done, function(err)
-        {
+        getSwiftInstance(req).searchObject(container_name, done, function (err) {
             res.status(err.code).end(JSON.stringify(err.message));
         });
     })
@@ -221,7 +265,7 @@ module.exports = function (app, io) {
     io.sockets.on('connection', function (socket) {
         connections[socket.id] = socket;
         socket.on('hsFromClient', function () {
-            socket.emit('hsToClient', {key: socket.id});
+            socket.emit('hsToClient', { key: socket.id });
         })
         socket.on('disconnect', function () {
             console.log('user disconnect');
@@ -233,7 +277,7 @@ module.exports = function (app, io) {
         var multiparty = require("multiparty");
         var form = new multiparty.Form();
         form.uploadDir = _path.files;
-        
+
         var container_name = req.query.conName;
         var dir_name = req.query.dirName;
         var socket_key = req.query.socketKey;
@@ -267,7 +311,7 @@ module.exports = function (app, io) {
 
             var path = _path.files + "/" + remoteSavedFileName;
             var stat = fs.statSync(path);
-            var str = progress ({
+            var str = progress({
                 length: stat.size,
                 time: 100
             });

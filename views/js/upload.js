@@ -6,7 +6,7 @@
 var uploadHandler = function () {
     var info = getAllSelectedAction();
     if (info.conName == '') {
-        commonHelperMessage('You should select container on the container list.', false);
+        commonHelperMessage('You should select container on the container list.', true);
         return;
     }
 
@@ -48,11 +48,21 @@ var uploadHandler = function () {
                 var isClick = (!info.dirPath) ? true : false;
                 containerHandler(info.conName, isClick, function () {
                     if (!isClick) {
+                        // var selector ;
+                        // if (info.objectType == 'dir') {
+                        //     selector = '.object-depth-' + (_navigatorGlobal.currentDepth - 1) + '.file-selected';
+                        // } else {
+                        //     var selector = '.object-depth-' + (_navigatorGlobal.currentDepth - 1) + '.file-old-selected';
+                        // }
+                        // $(selector).trigger('click');
                         var selector ;
-                        if (info.objectType == 'dir') {
-                            selector = '.object-depth-' + (_navigatorGlobal.currentDepth - 1) + '.file-selected';
-                        } else {
-                            var selector = '.object-depth-' + (_navigatorGlobal.currentDepth - 1) + '.file-old-selected';
+                        var lastPanelIndex = $('.panel-border > .col-lg-4th-panel').length - 1;
+                        if (lastPanelIndex == _navigatorGlobal.currentDepth) // 최상위에서 만든 경우
+                        {
+                            selector = '.object-depth-' + (lastPanelIndex - 1) + '.file-selected';
+                        } else // 그 외
+                        {
+                            selector = '.object-depth-' + (_navigatorGlobal.currentDepth - 1) + '.file-old-selected';
                         }
                         $(selector).trigger('click');
                     }
@@ -69,7 +79,7 @@ var uploadHandler = function () {
 var dragUploadHandler = function (file) {
     var info = getAllSelectedAction();
     if (info.conName == '') {
-        commonHelperMessage('You should select container on the container list.', false);
+        commonHelperMessage('You should select container on the container list.', true);
         return;
     }
 
@@ -107,11 +117,21 @@ var dragUploadHandler = function (file) {
                 var isClick = (!info.dirPath) ? true : false;
                 containerHandler(info.conName, isClick, function () {
                     if (!isClick) {
+                        // var selector ;
+                        // if (info.objectType == 'dir') {
+                        //     selector = '.object-depth-' + (_navigatorGlobal.currentDepth - 1) + '.file-selected';
+                        // } else {
+                        //     var selector = '.object-depth-' + (_navigatorGlobal.currentDepth - 1) + '.file-old-selected';
+                        // }
+                        // $(selector).trigger('click');
                         var selector ;
-                        if (info.objectType == 'dir') {
-                            selector = '.object-depth-' + (_navigatorGlobal.currentDepth - 1) + '.file-selected';
-                        } else {
-                            var selector = '.object-depth-' + (_navigatorGlobal.currentDepth - 1) + '.file-old-selected';
+                        var lastPanelIndex = $('.panel-border > .col-lg-4th-panel').length - 1;
+                        if (lastPanelIndex == _navigatorGlobal.currentDepth) // 최상위에서 만든 경우
+                        {
+                            selector = '.object-depth-' + (lastPanelIndex - 1) + '.file-selected';
+                        } else // 그 외
+                        {
+                            selector = '.object-depth-' + (_navigatorGlobal.currentDepth - 1) + '.file-old-selected';
                         }
                         $(selector).trigger('click');
                     }

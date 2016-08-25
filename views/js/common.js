@@ -84,7 +84,7 @@ var commonAjaxLoader = function (el, options) {
     var defaults = {
         bgColor: '#fff',
         duration: 500,
-        opacity: 0.7,
+        opacity: 1,
         classOveride: false
     }
     this.options = jQuery.extend(defaults, options);

@@ -5,7 +5,7 @@ var http = require('http');
 var env = require('node-env-file');
 env(_path.home + '/swift.properties');
 
-var AUTH_URL = process.env.AUTHURL;
+var AUTH_URL = process.env.AUTHURL;//'http://object-storage.ghama.io:5000/v2.0/tokens/';//
 var ENDPOINT = process.env.ENDPOINT;
 
 
@@ -27,6 +27,7 @@ module.exports = (function()
     // 인증 관련
     Swift.prototype.getTokens = function(callback, error)
     {
+        var that = this;
         var param = {
             method: 'POST',
             url: AUTH_URL,
@@ -56,7 +57,6 @@ module.exports = (function()
 
                 return;
             }
-
             if (!body.access) //statusCode 처리
             {
                 if(error)
@@ -66,6 +66,20 @@ module.exports = (function()
 
                 return;
             }
+            // endpoint 주소를 동적으로 가져오는 소스
+            // 우선 대기........
+            // var serviceCatalog = body.access.serviceCatalog;
+            // for (var i=0; i<serviceCatalog.length; i++) 
+            // {
+            //     var info = serviceCatalog[i];
+            //     if (info.type == "object-store" && info.name == "swift") 
+            //     {
+            //         var publicurl = info.endpoints[0].publicURL;
+            //         var temp = 'http://' + publicurl.replace('http://', '').split('/')[0] + '/';
+            //         that.options.endpoint =  temp;
+            //         break;
+            //     }
+            // }
             
             callback(body);
         });
@@ -286,6 +300,7 @@ module.exports = (function()
             headers: {
                 'x-auth-token': this.options.token
             },
+            encoding: 'binary',
             json: true
         };
         console.log("[CALL] name: getImageObjectInfo, method: " + param.method + "url: " + param.url);
@@ -304,7 +319,7 @@ module.exports = (function()
             if(response.statusCode == 200)
             {
                 if(callback)
-                    callback(body);
+                    callback(response, body);
             }
             else
             {

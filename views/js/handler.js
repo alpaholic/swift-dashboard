@@ -245,6 +245,43 @@ var sortObjectList = function (data) {
     return dataObject;
 }
 
+// swift object list를 directory 먼저 나올 수 있게 정렬해주는 함수 (검색용)
+var sortSearchObjectList = function (data) {
+    var dataObject = {
+        items: []
+    };
+
+    for (var i = 0; i < data.length; i++) {
+        var name = data[i].objectName;
+        var path = data[i].path;
+        var modified = data[i].lastModified;
+        var size = data[i].objectSize;
+        var type = "file";
+        var seq = 1;
+
+        if (data[i].objectType == 'application/directory') {
+            type = "dir";
+            seq = 0;
+        }
+        dataObject.items.push (
+            {
+                'objectName': name,
+                'path': path,
+                'lastModified': modified,
+                'objectSize': size,
+                'objectType': type,
+                'seq': seq
+            }
+        );
+    }
+
+    dataObject.items.sort(function (a, b) {
+        return a.seq < b.seq ? -1 : a.seq > b.seq ? 1 : 0;
+    })
+
+    return dataObject;
+}
+
 // 현재 선택된 container, directory path, object type, object name을 객체로 반환해주는 함수
 var getAllSelectedAction = function () 
 {
