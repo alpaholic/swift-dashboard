@@ -113,7 +113,9 @@ var createHandler = function () {
     var objectName = $('#object-name').val();
     var info = getAllSelectedAction();
     var service = new Service();
-    var special_pattern = /[`~!@#$%^&*|\\\'\";:\/?]/gi;
+    var special_pattern = /[`~!@+#$%^&*|\\\'\";:\/?]/gi;
+    objectName = objectName.replace(/(^\s*)|(\s*$)/g, "");
+    
     if (objectName == '') {
         commonInsertHtml('.create-warning', 'You should write container/directory name.');
         return;

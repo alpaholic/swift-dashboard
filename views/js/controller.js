@@ -91,12 +91,6 @@ $(document).on('drag dragend dragenter dragleave dragover dragstart drop', '.fil
 
 $(document).ready(function () {
     $('.first-panel').hide();
-//     $('.content-scroll').css('height', $(window).height() - 200 );
-    
-//     $(window).resize(function() {
-//         $('.content-main').css('height', $(window).height() - 200 );
-//    //});
-
     containerHandler();
     // 삭제 버튼
     confirmButton($('#btnDelete'), function (done) {

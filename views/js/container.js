@@ -112,6 +112,7 @@ var mainPageHandler = function () {
         $(this).find('.left-container-body').removeClass('container-selected');
     });
     $('#displayFileExplorer').hide();
+    $('#displaySeachResult').hide();
     $('.header-swift-info').show();
     $('.breadcrumb > li').each(function (i, e) {
         $(this).remove(); 
