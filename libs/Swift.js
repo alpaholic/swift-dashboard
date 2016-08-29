@@ -5,9 +5,9 @@ var http = require('http');
 var env = require('node-env-file');
 env(_path.home + '/swift.properties');
 
-var AUTH_URL = process.env.AUTHURL;//'http://object-storage.ghama.io:5000/v2.0/tokens/';//
-var ENDPOINT = process.env.ENDPOINT;
-
+//var AUTH_URL = process.env.AUTHURL;//'http://object-storage.ghama.io:5000/v2.0/tokens/';//
+//var ENDPOINT = process.env.ENDPOINT;
+const DEBUG = 0;
 
 module.exports = (function()
 {
@@ -18,7 +18,8 @@ module.exports = (function()
             password: '',
             tenantName: '',
             tenantId: '',
-            endpoint: ENDPOINT,
+            endpoint: '',
+            authUrl: '',
             url: '',
             token: ''
         }, options);
@@ -30,7 +31,7 @@ module.exports = (function()
         var that = this;
         var param = {
             method: 'POST',
-            url: AUTH_URL,
+            url: this.options.authUrl,
             body:
             {
                 auth:
@@ -66,21 +67,22 @@ module.exports = (function()
 
                 return;
             }
-            // endpoint 주소를 동적으로 가져오는 소스
-            // 우선 대기........
-            // var serviceCatalog = body.access.serviceCatalog;
-            // for (var i=0; i<serviceCatalog.length; i++) 
-            // {
-            //     var info = serviceCatalog[i];
-            //     if (info.type == "object-store" && info.name == "swift") 
-            //     {
-            //         var publicurl = info.endpoints[0].publicURL;
-            //         var temp = 'http://' + publicurl.replace('http://', '').split('/')[0] + '/';
-            //         that.options.endpoint =  temp;
-            //         break;
-            //     }
-            // }
-            
+            //endpoint 주소를 동적으로 가져오는 소스
+            var serviceCatalog = body.access.serviceCatalog;
+            for (var i=0; i<serviceCatalog.length; i++) 
+            {
+                var info = serviceCatalog[i];
+                if (info.type == "object-store" && info.name == "swift") 
+                {
+                    var publicurl = info.endpoints[0].publicURL;
+                    var temp = 'http://' + publicurl.replace('http://', '').split('/')[0] + '/';
+                    that.options.endpoint =  temp;
+                    break;
+                }
+            }
+            if (DEBUG)
+                that.options.endpoint = process.env.ENDPOINT;
+                
             callback(body);
         });
     };

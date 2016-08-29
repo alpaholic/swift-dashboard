@@ -111,6 +111,18 @@ p.bg-danger.custom, p.bg-success.custom
     overflow-y: auto;
 }
 
+.explorer-panel
+{
+    overflow-x: scroll;
+    margin-bottom: 7px;
+    font-size: 13px;
+}
+
+.object-file-type
+{
+    top: 0
+}
+
 .left-container-info
 {
     cursor: pointer;

@@ -64,11 +64,13 @@ module.exports = function (app, io) {
         if (req.session.swift)
             res.render('index');
         else {
+            console.log(credentials);
             var swift = new Swift({
                 userId: credentials.username,
                 password: credentials.password,
                 tenantName: credentials.tenantName,
-                tenantId: credentials.tenantId
+                tenantId: credentials.tenantId,
+                authUrl: credentials.auth_url + "/tokens/"
             });
 
             var done = function (result) {

@@ -1,6 +1,6 @@
 ---
 applications:
-- name: swift-portal
+- name: swift-dashboard
   command: node app.js
   buildpack: nodejs_buildpack
   env:
